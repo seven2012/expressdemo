@@ -1,0 +1,105 @@
+{{!--
+<h1>hello world</h1>
+<style>
+    ol {
+        list-style: none;
+        display: flex;
+        justify-content: center;
+    }
+    
+    li {
+        width: 30px;
+    }
+</style>
+<nav id="pager" data-total-pages="{{totalPages}}" data-current-page="{{currentPage}}"> </nav>
+<script>
+    console.log(pager.dataset.totalPages) //此处data的作用，后端向js传递数据
+    console.log(pager.dataset.currentPage)
+
+</script>
+
+<div>共{{totalPages}}页 | 当前是第{{currentPage}}页</div>--}}
+<hr>
+<div id="articles">
+    {{#each articles}}
+    <aritcle>
+        <h1> {{title}} </h1>
+        <p> {{content}} </p>
+    </aritcle>
+    {{/each}}
+</div>
+
+<div>
+    <button id="loadMore">加载更多...</button>
+    <button hidden id="noMore">没有更多</button>
+</div>
+
+
+<script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script>
+    /*
+    //前后端分离加载
+    {
+        let $pager = $('#pager')
+        let pager = $pager[0]
+        let {totalPages,currentPage} = pager.dataset
+            totalPages = window.parseInt(totalPages,10)
+            currentPage = window.parseInt(currentPage,10)
+        
+        let $ol = $('<ol />')
+        buttonCount = 10
+        let start1 = Math.max(currentPage - Math.round(buttonCount/2),1)//7-5,1//2
+        let end1 = Math.min(start1 + buttonCount - 1,totalPages)//2+5-1,10//6
+        //2~6 7 
+        let end2 = Math.min(currentPage + Math.round(buttonCount / 2) - 1,totalPages)//11,10 //10
+        let start2 = Math.max(end2 - buttonCount + 1,1)//10-10+1,1//1
+        let start = Math.min(start1,start2)//2,1//1
+        let end = Math.max(end1,end2)//6,10 //10
+
+        for(let i=start;i<= end;i++){
+            let $li
+            if(i === currentPage){
+                $li=$(`<li><span>${i}</span></li>`)
+            }else{
+                $li=$(`<li><a href="?page=${i}">${i}</a></li>`)
+            }
+            $ol.append($li)
+        }
+        $pager.append($ol)
+
+      }
+      */
+      //以下是自动加载
+    {
+        let page = 1
+        $button = $('#loadMore')
+        $button.on('click', function () {
+            $.get(`/paged?page=${page+1}`, (response) => {
+                let { articles } = response
+                articles.forEach((article, index) => {
+                    let $article =$(`<article><h1>${article.title}</h1><p>${article.content}</p></article>`)
+                    $article.appendTo($('#articles'))
+                })
+                page+=1
+                if(response.currentPage >= response.totalPages){
+                    $button.attr('hidden',true).attr('disabled',true)
+                    $('#noMore').attr('hidden',false)
+                }
+            })
+        })
+        $(document).on('scroll',function(){
+
+            console.log(document.body.scrollTop)//滚动条顶端距离视口顶端的高度
+            //let viewButton = document.body.scrollTop + document.documentElement.clientHeight//可视区的视口高度（固定不变）
+            //console.log(viewButton)
+            let delta = loadMore.getBoundingClientRect().top - document.documentElement.clientHeight
+            //button距离顶部的高度-视口的高度=button相对视口还有多少像素就可以出现
+            console.log(loadMore.getBoundingClientRect().top)
+            console.log(delta)
+            if(delta < 100){
+                loadMore.click()
+            }
+
+        })
+    }
+</script>
